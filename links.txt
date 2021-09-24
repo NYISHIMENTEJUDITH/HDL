@@ -1,0 +1,5 @@
+https://www.youtube.com/watch?v=XAYrmGc4ZYM
+
+https://levelup.gitconnected.com/how-to-write-a-formula-string-parser-in-python-5362210afeab
+
+https://gist.github.com/qiuyujx/fd285e2a2638978ae08f0b5c3eae54ab
