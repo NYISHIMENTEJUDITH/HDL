@@ -2,8 +2,12 @@
 import numpy as np
 from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
+import matplotlib
 import matplotlib.animation as animation
 from scipy import fftpack
+import math
+from PySpice.Unit import *
+from matplotlib.pylab import *
 
 def dumping_oscillation():
         def data_gen(t=0):
@@ -212,7 +216,7 @@ def ohmslow():
     #create labels  YOU NEED TO CHANGE THESE!!!
     plt.xlabel('Current (Amps)')
     plt.ylabel('Voltage (Volts)')
-    plt.title('Position vs Time')
+    plt.title('Ohms low')
 
     #plt.errorbar(x, y, yerr=dy, xerr=None, fmt=None) #don't need to plot x error bars
 
@@ -321,7 +325,7 @@ def voice_signal():
 
     from scipy.io import wavfile
 
-    rate, audio = wavfile.read('../data/voice.wav')
+    rate, audio = wavfile.read('./data/voice.wav')
     #We convert to mono by averaging the left and right channels.
 
     audio = np.mean(audio, axis=1)
@@ -411,10 +415,125 @@ def simple_palabola():
     plt.plot(x_cords, y_cords)
     plt.show()
 
+def electric_power_star_delta():
+    # https://pyspice.fabrice-salvaire.fr/releases/v1.3/examples/ngspice-shared/external-source.html
+    frequency = 50@u_Hz
+    w = frequency.pulsation
+    period = frequency.period
+
+    rms_mono = 230
+    amplitude_mono = rms_mono * math.sqrt(2)
+
+    t = np.linspace(0, 3*float(period), 1000)
+    L1 = amplitude_mono * np.cos(t*w)
+    L2 = amplitude_mono * np.cos(t*w - 2*math.pi/3)
+    L3 = amplitude_mono * np.cos(t*w - 4*math.pi/3)
+
+    rms_tri = math.sqrt(3) * rms_mono
+    amplitude_tri = rms_tri * math.sqrt(2)
+
+    L12 = amplitude_tri * np.cos(t*w + math.pi/6)
+    L23 = amplitude_tri * np.cos(t*w - math.pi/2)
+    L31 = amplitude_tri * np.cos(t*w - 7*math.pi/6)
+
+    figure = plt.figure(1, (20, 10))
+    plt.plot(t, L1, t, L2, t, L3,
+            t, L12, t, L23, t, L31,
+            # t, L1-L2, t, L2-L3, t, L3-L1,
+    )
+    plt.grid()
+    plt.title('Three-phase electric power: Y and Delta configurations (230V Mono/400V Tri 50Hz)')
+    plt.legend(('L1-N', 'L2-N', 'L3-N',
+                'L1-L2', 'L2-L3', 'L3-L1'),
+            loc=(.7,.5))
+    plt.xlabel('t [s]')
+    plt.ylabel('[V]')
+    plt.axhline(y=rms_mono, color='blue')
+    plt.axhline(y=-rms_mono, color='blue')
+    plt.axhline(y=rms_tri, color='blue')
+    plt.axhline(y=-rms_tri, color='blue')
+    plt.show()
+
+def three_phase_wave():
+        plt.title('three phase signal')
+
+        ax = plt.subplot(111)
+        t = np.arange(0.0, 5.0 , 0.01)
+        s = np.sin(2*np.pi*t)
+        ss = np.sin(2*np.pi*t+120)
+        sss = np.sin(2*np.pi*t+240)
+        line, = plt.plot(t,s, lw=2)
+        line, = plt.plot(t,ss, lw=2)
+        line, = plt.plot(t,sss, lw=2)
+        plt.ylim(-3 ,3)
+        plt.show()
+
+def sinc_function():
+        X = np.linspace(-6,6, 1024)
+        Y = np.sinc(X)
+        plt.title('sinc_function') # a little notation
+        plt.xlabel('array variables') #adding xlabel
+        plt.ylabel('random variables') #adding ylabel
+        #plt.text(-5, 0.4, 'Matplotlib') # -5 is the x value and 0.4 is y value
+        plt.plot(X,Y, color='r', marker ='o',markersize =3,markevery = 30, markerfacecolor='w',linewidth= 3.0,markeredgecolor = 'b')
+        plt.show()
+
+def distrubution_function():
+        def gf(X, mu, sigma):
+            a = 1. /(sigma*np.sqrt(2. * np.pi))
+            b = -1. /(2. * sigma **2)
+            return a * np.exp(b * (X - mu)**2)
+
+        X = np.linspace(-6, 6, 1024)
+        for i in range(64):
+            samples = np.random.standard_normal(50)
+            mu,sigma = np.mean(samples), np.std(samples)
+            plt.plot(X, gf(X, mu, sigma),color = '.75',linewidth='.5')
+
+        plt.plot(X,gf(X, 0., 1.),color ='.00',linewidth=3.)
+        plt.show()
+
+def area_area_under_curve():
+        def func(x):
+            return (x - 3) * (x - 5) * (x - 7) + 85
 
 
+        a, b = 2, 9  # integral limits
+        x = np.linspace(0, 10)
+        y = func(x)
 
+        fig, ax = plt.subplots()
+        plt.plot(x, y, 'r', linewidth=2)
+        plt.ylim(ymin=0)
 
+        # Make the shaded region
+        ix = np.linspace(a, b)
+        iy = func(ix)
+        verts = [(a, 0)] + list(zip(ix, iy)) + [(b, 0)]
+        poly = Polygon(verts, facecolor='0.9', edgecolor='0.5')
+        ax.add_patch(poly)
+
+        plt.text(0.5 * (a + b), 30, r"$\int_a^b f(x)\mathrm{d}x$",
+                 horizontalalignment='center', fontsize=20)
+
+        plt.figtext(0.9, 0.05, '$x$')
+        plt.figtext(0.1, 0.9, '$y$')
+
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        ax.xaxis.set_ticks_position('bottom')
+
+        ax.set_xticks((a, b))
+        ax.set_xticklabels(('$a$', '$b$'))
+        ax.set_yticks([])
+
+        plt.show()
+
+# area_area_under_curve()
+# distrubution_function()
+# sinc_function()
+# three_phase_wave()
+# electric_power_star_delta()
 # simple_palabola()
 # kaiser_window()
 # FT_rectangular()
@@ -430,4 +549,4 @@ def simple_palabola():
 # dumping_oscillation()
 # pulse_generation()
 # cosine_wave()
-#sine_cosine()
+# sine_cosine()
